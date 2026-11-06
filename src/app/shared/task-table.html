@@ -1,0 +1,53 @@
+@if (tasks().length) {
+  <div class="table-scroll" tabindex="0" role="region" aria-label="Project tasks">
+    <table>
+      <caption class="sr-only">
+        All active project tasks
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Task</th>
+          <th scope="col">Status</th>
+          <th scope="col">Start</th>
+          <th scope="col">End</th>
+          <th scope="col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (task of tasks(); track task.id) {
+          <tr>
+            <th scope="row">
+              <a [routerLink]="['/projects', projectId(), 'tasks', task.id]">{{ task.name }}</a>
+              <p class="muted description">{{ task.description }}</p>
+            </th>
+            <td><app-status-badge [status]="task.status" /></td>
+            <td>{{ date(task.startDate) }}</td>
+            <td>{{ date(task.endDate) }}</td>
+            <td>
+              <div class="actions">
+                <button
+                  type="button"
+                  [disabled]="busy()"
+                  (click)="edit.emit(task)"
+                  [attr.aria-label]="'Edit ' + task.name"
+                >
+                  Edit</button
+                ><button
+                  type="button"
+                  class="danger"
+                  [disabled]="busy()"
+                  (click)="remove.emit(task)"
+                  [attr.aria-label]="'Delete ' + task.name"
+                >
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+} @else {
+  <app-empty-state message="No tasks yet. Add a task to set this project's schedule." />
+}

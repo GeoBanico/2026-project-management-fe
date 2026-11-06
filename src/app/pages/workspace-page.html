@@ -1,0 +1,265 @@
+<nav aria-label="Breadcrumb" class="breadcrumbs">
+  <a routerLink="/projects">Projects</a>
+  @if (projectId) {
+    <span aria-hidden="true">/</span
+    ><a [routerLink]="['/projects', projectId]">{{ data().project?.name || 'Project' }}</a>
+  }
+  @if (taskId) {
+    <span aria-hidden="true">/</span><span>Task details</span>
+  }
+</nav>
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">PROJECT MANAGEMENT</p>
+    <h1>
+      {{
+        taskId
+          ? data().task?.name || 'Task details'
+          : projectId
+            ? data().project?.name || 'Project details'
+            : 'Projects'
+      }}
+    </h1>
+  </div>
+  <button type="button" (click)="refresh()" [disabled]="busy() || loading() || !!editor()">
+    Refresh
+  </button>
+</div>
+@if (notice()) {
+  <p role="status" class="success">
+    {{ notice() }}
+    @if (error()) {
+      The latest data could not be loaded. Retry refresh below.
+    }
+  </p>
+}
+@if (loading()) {
+  <app-loading-state />
+}
+@if (notFound()) {
+  <app-error-state
+    message="This page was not found in the selected project context."
+    [retryable]="false"
+  /><a routerLink="/projects">Back to projects</a>
+} @else {
+  @if (error()) {
+    <app-error-state [message]="error()" (retry)="refresh()" />
+  }
+  @if (!loading()) {
+    @for (form of editor() ? [editor()!] : []; track form) {
+      @if (form.kind === 'project') {
+        <app-project-form
+          [entity]="form.entity"
+          [saving]="busy()"
+          [error]="saveError()"
+          (save)="save($event)"
+          (cancel)="closeEditor()"
+        />
+      } @else {
+        <app-task-form
+          [entity]="form.entity"
+          [saving]="busy()"
+          [error]="saveError()"
+          (save)="save($event)"
+          (cancel)="closeEditor()"
+        />
+      }
+    }
+    @if (!projectId) {
+      <div class="section-heading">
+        <h2>
+          All projects <span class="muted">({{ data().projects.length }})</span>
+        </h2>
+        <button
+          type="button"
+          class="primary"
+          [disabled]="busy() || !!editor()"
+          (click)="openEditor('project')"
+        >
+          Create project
+        </button>
+      </div>
+      @if (!data().projects.length && !error()) {
+        <app-empty-state message="No projects yet. Create your first project to get started." />
+      }
+      <div class="project-grid">
+        @for (project of data().projects; track project.id) {
+          <article class="panel project-card">
+            <div class="section-heading">
+              <h2>
+                <a [routerLink]="['/projects', project.id]">{{ project.name }}</a>
+              </h2>
+              <app-status-badge [status]="project.status" />
+            </div>
+            <p class="description">{{ project.description || 'No description' }}</p>
+            <app-schedule-summary [schedule]="project" />
+            <div class="actions">
+              <a class="button" [routerLink]="['/projects', project.id]">Open project</a
+              ><button
+                type="button"
+                [disabled]="busy() || !!editor()"
+                (click)="openEditor('project', project)"
+              >
+                Edit</button
+              ><button
+                type="button"
+                class="danger"
+                [disabled]="busy() || !!editor()"
+                (click)="deleteProject(project)"
+              >
+                Delete
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+    } @else if (data().project; as project) {
+      @if (!taskId) {
+        <section class="panel">
+          <div class="section-heading">
+            <h2>Project overview</h2>
+            <app-status-badge [status]="project.status" />
+          </div>
+          <p class="description">{{ project.description || 'No description' }}</p>
+          <app-schedule-summary [schedule]="project" />
+          <div class="actions">
+            <button
+              type="button"
+              [disabled]="busy() || !!editor()"
+              (click)="openEditor('project', project)"
+            >
+              Edit project</button
+            ><button
+              type="button"
+              class="danger"
+              [disabled]="busy() || !!editor()"
+              (click)="deleteProject(project)"
+            >
+              Delete project
+            </button>
+          </div>
+        </section>
+        <div class="section-heading">
+          <h2>
+            Tasks <span class="muted">({{ data().tasks.length }})</span>
+          </h2>
+          <button
+            type="button"
+            class="primary"
+            [disabled]="busy() || !!editor()"
+            (click)="openEditor('task')"
+          >
+            Create task
+          </button>
+        </div>
+        <app-task-table
+          [tasks]="data().tasks"
+          [projectId]="project.id"
+          [busy]="busy() || !!editor()"
+          (edit)="openEditor('task', $event)"
+          (remove)="deleteTask($event)"
+        />
+      } @else if (data().task; as task) {
+        <section class="panel">
+          <div class="section-heading">
+            <h2>Task overview</h2>
+            <app-status-badge [status]="task.status" />
+          </div>
+          <p class="description">{{ task.description || 'No description' }}</p>
+          <app-schedule-summary [schedule]="task" />
+          <div class="actions">
+            <button
+              type="button"
+              [disabled]="busy() || !!editor()"
+              (click)="openEditor('task', task)"
+            >
+              Edit task</button
+            ><button
+              type="button"
+              class="danger"
+              [disabled]="busy() || !!editor()"
+              (click)="deleteTask(task)"
+            >
+              Delete task
+            </button>
+          </div>
+          <h3>Change status</h3>
+          <div class="status-controls">
+            @for (status of statuses; track status) {
+              <div>
+                <button
+                  type="button"
+                  [disabled]="busy() || !!editor() || !!reason(status)"
+                  (click)="changeStatus(status)"
+                >
+                  {{ status.replaceAll('_', ' ') }}
+                </button>
+                @if (reason(status)) {
+                  <small>{{ reason(status) }}</small>
+                }
+              </div>
+            }
+          </div>
+        </section>
+        <section class="panel">
+          <h2>Project schedule</h2>
+          <app-schedule-summary [schedule]="project" />
+        </section>
+        <app-dependency-list
+          heading="Prerequisites — this task depends on"
+          [tasks]="incoming()"
+          [projectId]="project.id"
+        />
+        <app-dependency-list
+          heading="Tasks that depend on this task"
+          [tasks]="task.dependentTasks"
+          [projectId]="project.id"
+          [removable]="true"
+          [busy]="busy() || !!editor()"
+          (remove)="removeDependent($event)"
+        />
+        <section class="panel">
+          <h2>Add task that depends on this task</h2>
+          @if (data().candidates.length) {
+            <label for="dependent-task">Eligible downstream task</label>
+            <div class="actions">
+              <select
+                id="dependent-task"
+                [value]="candidateId()"
+                (change)="candidateId.set($any($event.target).value)"
+                [disabled]="busy() || !!editor()"
+              >
+                <option value="">Select a task</option>
+                @for (candidate of data().candidates; track candidate.id) {
+                  <option [value]="candidate.id">{{ candidate.name }} (#{{ candidate.id }})</option>
+                }</select
+              ><button
+                type="button"
+                class="primary"
+                [disabled]="busy() || !!editor() || !candidateId()"
+                (click)="addDependent()"
+              >
+                Add dependency
+              </button>
+            </div>
+          } @else {
+            <app-empty-state
+              message="No eligible tasks. Tasks already linked, prerequisites, and tasks with incompatible statuses cannot be added."
+            />
+          }
+        </section>
+      }
+    }
+  }
+}
+@if (busy()) {
+  <p role="status" class="saving-status">Saving…</p>
+}
+@if (confirmation(); as dialog) {
+  <app-confirmation-dialog
+    [heading]="dialog.heading"
+    [message]="dialog.message"
+    (confirm)="confirm()"
+    (cancel)="confirmation.set(null)"
+  />
+}

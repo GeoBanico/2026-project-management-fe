@@ -1,0 +1,16 @@
+<dl class="schedule">
+  <div>
+    <dt>Start</dt>
+    <dd>{{ date(schedule().startDate) }}</dd>
+  </div>
+  <div>
+    <dt>End</dt>
+    <dd>{{ date(schedule().endDate) }}</dd>
+  </div>
+  @if (schedule().timeLeft; as remaining) {
+    <div>
+      <dt>Time left</dt>
+      <dd>{{ remaining }}</dd>
+    </div>
+  }
+</dl>

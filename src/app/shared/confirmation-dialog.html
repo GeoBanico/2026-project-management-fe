@@ -1,0 +1,13 @@
+<dialog
+  #dialog
+  aria-labelledby="confirmation-heading"
+  aria-describedby="confirmation-message"
+  (cancel)="$event.preventDefault(); cancel.emit()"
+>
+  <h2 id="confirmation-heading">{{ heading() }}</h2>
+  <p id="confirmation-message">{{ message() }}</p>
+  <div class="actions">
+    <button type="button" autofocus (click)="cancel.emit()">Cancel</button
+    ><button type="button" class="danger" (click)="confirm.emit()">{{ confirmLabel() }}</button>
+  </div>
+</dialog>

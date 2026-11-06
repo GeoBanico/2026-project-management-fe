@@ -1,0 +1,74 @@
+<section class="panel editor">
+  <h2>{{ entity() ? 'Edit' : 'Create' }} {{ taskMode ? 'task' : 'project' }}</h2>
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <fieldset [disabled]="saving()">
+      <legend class="sr-only">{{ taskMode ? 'Task' : 'Project' }} details</legend>
+      <label for="entity-name">Name <span aria-hidden="true">*</span></label>
+      <input
+        id="entity-name"
+        formControlName="name"
+        maxlength="50"
+        required
+        [attr.aria-invalid]="invalid('name')"
+        aria-describedby="name-help"
+      />
+      <p id="name-help" [class.validation]="invalid('name')">
+        Required. Use a nonblank name of at most 50 characters.
+      </p>
+      <label for="entity-description">Description</label
+      ><textarea
+        id="entity-description"
+        formControlName="description"
+        maxlength="300"
+        rows="3"
+        [attr.aria-invalid]="invalid('description')"
+        aria-describedby="description-help"
+      ></textarea>
+      <p id="description-help" [class.validation]="invalid('description')">Up to 300 characters.</p>
+      @if (taskMode) {
+        <p class="muted">Dates use {{ timezone }}. New tasks start as Pending.</p>
+        <div class="form-grid">
+          <div>
+            <label for="start-date">Start date and time *</label
+            ><input
+              id="start-date"
+              type="datetime-local"
+              step="0.001"
+              formControlName="startDate"
+              required
+              [attr.aria-invalid]="invalid('startDate')"
+              aria-describedby="date-help"
+            />
+          </div>
+          <div>
+            <label for="end-date">End date and time *</label
+            ><input
+              id="end-date"
+              type="datetime-local"
+              step="0.001"
+              formControlName="endDate"
+              required
+              [attr.aria-invalid]="invalid('endDate')"
+              aria-describedby="date-help"
+            />
+          </div>
+        </div>
+        <p
+          id="date-help"
+          [class.validation]="
+            form.hasError('dateOrder') && (submitted || form.controls.endDate.touched)
+          "
+        >
+          Both dates are required. End must be strictly after start.
+        </p>
+      }
+      @if (error()) {
+        <p class="error" role="alert">{{ error() }}</p>
+      }
+      <div class="actions">
+        <button type="submit" class="primary">{{ saving() ? 'Saving…' : 'Save' }}</button
+        ><button type="button" (click)="cancel.emit()">Cancel</button>
+      </div>
+    </fieldset>
+  </form>
+</section>

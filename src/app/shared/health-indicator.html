@@ -1,0 +1,15 @@
+<div class="health">
+  <span role="status"
+    >Database: <strong>{{ loading() ? 'Checking…' : state() }}</strong></span
+  ><button
+    type="button"
+    (click)="retry()"
+    [disabled]="loading()"
+    aria-label="Retry database health check"
+  >
+    Retry
+  </button>
+  @if (error()) {
+    <small>{{ error() }}</small>
+  }
+</div>
